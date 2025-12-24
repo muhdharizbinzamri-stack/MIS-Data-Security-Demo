@@ -7,107 +7,65 @@
 
 <style>
 * { box-sizing: border-box; }
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #f4f6f8;
-}
+body { margin:0; font-family: Arial, sans-serif; background:#f4f6f8; }
 
-/* HEADER */
 header {
-  background: #1f2937;
-  color: white;
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background:#1f2937; color:white;
+  padding:12px 16px;
+  display:flex; justify-content:space-between; align-items:center;
 }
 
-/* NAV */
 nav {
-  background: #111827;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  background:#111827;
+  display:flex; flex-wrap:wrap; justify-content:center;
 }
 nav a {
-  padding: 10px 14px;
-  color: #d1d5db;
-  text-decoration: none;
-  cursor: pointer;
+  padding:10px 14px; color:#d1d5db;
+  cursor:pointer; text-decoration:none;
 }
-nav a:hover, nav a.active {
-  background: #374151;
-  color: white;
-}
+nav a:hover, nav a.active { background:#374151; color:white; }
 
-/* MAIN */
 main {
-  padding: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  padding:20px;
+  display:flex; flex-wrap:wrap; gap:20px;
 }
-.section {
-  width: 100%;
-}
+
+.section { width:100%; }
 .card {
-  background: white;
-  padding: 20px;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
+  background:white; padding:20px;
+  border-radius:6px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* LOGIN + SPINNER */
-.fullscreen {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111827;
-}
-.spinner {
-  border: 6px solid #e5e7eb;
-  border-top: 6px solid #2563eb;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  100% { transform: rotate(360deg); }
-}
+table { width:100%; border-collapse:collapse; }
+th, td { padding:10px; border-bottom:1px solid #e5e7eb; }
+.flag { color:#b45309; font-weight:bold; }
 
-/* TABLE */
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #e5e7eb;
-}
-.flag { color: #b45309; font-weight: bold; }
-
-/* BUTTON */
 button {
-  padding: 8px 14px;
-  background: #2563eb;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
+  padding:8px 14px;
+  background:#2563eb; border:none;
+  color:white; border-radius:4px; cursor:pointer;
 }
-button.logout {
-  background: #dc2626;
+button.logout { background:#dc2626; }
+
+.fullscreen {
+  height:100vh; display:flex;
+  align-items:center; justify-content:center;
+  background:#111827;
 }
 
-/* FOOTER */
+.spinner {
+  border:6px solid #e5e7eb;
+  border-top:6px solid #2563eb;
+  border-radius:50%;
+  width:50px; height:50px;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform:rotate(360deg); } }
+
 footer {
-  text-align: center;
-  padding: 10px;
-  color: #6b7280;
+  text-align:center; padding:10px;
+  color:#6b7280;
 }
 </style>
 </head>
@@ -118,9 +76,18 @@ footer {
 <div id="loginScreen" class="fullscreen">
   <div class="card" style="width:360px;">
     <h3>SecureAudit Cloud Login</h3>
-    <input id="username" placeholder="Username" style="width:100%; padding:8px; margin-bottom:10px">
-    <input id="password" type="password" placeholder="Password" style="width:100%; padding:8px">
-    <button onclick="login()">Login</button>
+    <input id="username" placeholder="Username" style="width:100%;padding:8px;margin-bottom:10px">
+    <input id="password" type="password" placeholder="Password" style="width:100%;padding:8px">
+    <button onclick="checkCredentials()" style="width:100%;margin-top:10px">Next</button>
+  </div>
+</div>
+
+<!-- MFA -->
+<div id="authScreen" class="fullscreen" style="display:none;">
+  <div class="card" style="width:360px;">
+    <h3>Authenticator Code</h3>
+    <input id="authCode" placeholder="6-digit code" style="width:100%;padding:8px">
+    <button onclick="verifyAuth()" style="width:100%;margin-top:10px">Verify</button>
   </div>
 </div>
 
@@ -137,20 +104,25 @@ footer {
 </header>
 
 <nav>
-  <a onclick="showSection('dashboard', this)" class="active">Dashboard</a>
-  <a onclick="showSection('audit', this)">Audit Logs</a>
-  <a onclick="showSection('settings', this)">Settings</a>
+  <a class="active" onclick="showSection('dashboard',this)">Dashboard</a>
+  <a onclick="showSection('audit',this)">Audit Logs</a>
+  <a onclick="showSection('activity',this)">Unusual Activity</a>
+  <a onclick="showSection('mfa',this)">MFA</a>
+  <a onclick="showSection('reports',this)">Reports</a>
+  <a onclick="showSection('customers',this)">Customers</a>
+  <a onclick="showSection('notifications',this)">Alerts</a>
+  <a onclick="showSection('settings',this)">Settings</a>
 </nav>
 
 <main>
   <div id="dashboard" class="section">
     <div class="card">
       <h3>Security Overview</h3>
-      <p>Active Alerts: <b>2</b></p>
+      <canvas id="activityChart" height="120"></canvas>
     </div>
   </div>
 
-  <div id="audit" class="section" style="display:none;">
+  <div id="audit" class="section" style="display:none">
     <div class="card">
       <h3>Audit Logs</h3>
       <table>
@@ -161,20 +133,61 @@ footer {
     </div>
   </div>
 
-  <div id="settings" class="section" style="display:none;">
+  <div id="activity" class="section" style="display:none">
+    <div class="card">
+      <h3>Unusual Activity</h3>
+      <ul>
+        <li>Login outside business hours</li>
+        <li>Large data export</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="mfa" class="section" style="display:none">
+    <div class="card">
+      <h3>MFA Management</h3>
+      <p>Admin01 – Enabled</p>
+      <p>Staff12 – <span class="flag">Disabled</span></p>
+    </div>
+  </div>
+
+  <div id="reports" class="section" style="display:none">
+    <div class="card">
+      <h3>Security Reports</h3>
+      <p>Total Incidents: 5</p>
+    </div>
+  </div>
+
+  <div id="customers" class="section" style="display:none">
+    <div class="card">
+      <h3>Customer Data (Masked)</h3>
+      <p>Access fully audited</p>
+    </div>
+  </div>
+
+  <div id="notifications" class="section" style="display:none">
+    <div class="card">
+      <h3>Alerts</h3>
+      <ul>
+        <li>🔴 Customer DB export</li>
+        <li>🟠 Login anomaly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="settings" class="section" style="display:none">
     <div class="card">
       <h3>Settings</h3>
-      <label><input type="checkbox" checked> Enable Email Alerts</label><br><br>
-      <label><input type="checkbox"> Enforce MFA for all users</label><br><br>
-      <label>Alert Sensitivity
-        <select style="width:100%; padding:6px;">
+      <label><input type="checkbox" checked> Email alerts</label><br><br>
+      <label><input type="checkbox"> Enforce MFA</label><br><br>
+      <label>Alert sensitivity
+        <select style="width:100%;padding:6px;">
           <option>Low</option>
           <option selected>Medium</option>
           <option>High</option>
         </select>
-      </label>
-      <br><br>
-      <button>Save Settings</button>
+      </label><br><br>
+      <label><input type="checkbox"> Auto logout after inactivity</label>
     </div>
   </div>
 </main>
@@ -182,25 +195,43 @@ footer {
 <footer>© 2025 SecureAudit Cloud</footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function login() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('loadingScreen').style.display = 'flex';
-  setTimeout(() => {
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-  }, 1500);
+function checkCredentials(){
+  if(username.value && password.value){
+    loginScreen.style.display='none';
+    authScreen.style.display='flex';
+  } else alert('Enter credentials');
 }
 
-function logout() {
-  location.reload();
+function verifyAuth(){
+  if(/^[0-9]{6}$/.test(authCode.value)){
+    authScreen.style.display='none';
+    loadingScreen.style.display='flex';
+    setTimeout(()=>{
+      loadingScreen.style.display='none';
+      app.style.display='block';
+      initChart();
+    },1200);
+  } else alert('Invalid code');
 }
 
-function showSection(id, el) {
-  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-  document.getElementById(id).style.display = 'block';
-  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  if (el) el.classList.add('active');
+function logout(){ location.reload(); }
+
+function showSection(id, el){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+function initChart(){
+  new Chart(activityChart,{
+    type:'bar',
+    data:{labels:['Mon','Tue','Wed','Thu','Fri'],
+    datasets:[{data:[12,19,8,15,5]}]},
+    options:{plugins:{legend:{display:false}}}
+  });
 }
 </script>
 
