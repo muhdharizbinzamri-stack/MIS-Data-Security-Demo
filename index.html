@@ -2,201 +2,207 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SecureAudit Cloud – StoreHub Protection</title>
+<title>SecureAudit Cloud</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body {font-family: Arial, sans-serif; margin: 0; background: #f4f6f8;}
-header {background: #1f2937; color: white; padding: 12px; text-align:center;}
-nav {background: #111827; color: white; display:flex; justify-content:space-around; padding:10px 0;}
-nav a {color:#d1d5db; text-decoration:none; font-size:14px; text-align:center;}
-nav a:hover {background: #374151; color: white;}
-main {padding: 20px; display:flex; flex-wrap:wrap; gap:20px;}
-.card {background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex:1; min-width:300px;} 
-.status-low {color: green; font-weight: bold;}
-table {width: 100%; border-collapse: collapse;}
-th, td {padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left;}
-.flag {color: #b45309; font-weight: bold;}
-button {padding: 8px 14px; background: #2563eb; border: none; color: white; border-radius: 4px; cursor:pointer;}
-footer {text-align: center; padding: 10px; color: #6b7280;}
+* { box-sizing: border-box; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f4f6f8;
+}
+
+/* HEADER */
+header {
+  background: #1f2937;
+  color: white;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* NAV */
+nav {
+  background: #111827;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+nav a {
+  padding: 10px 14px;
+  color: #d1d5db;
+  text-decoration: none;
+  cursor: pointer;
+}
+nav a:hover, nav a.active {
+  background: #374151;
+  color: white;
+}
+
+/* MAIN */
+main {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.section {
+  width: 100%;
+}
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* LOGIN + SPINNER */
+.fullscreen {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111827;
+}
+.spinner {
+  border: 6px solid #e5e7eb;
+  border-top: 6px solid #2563eb;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.flag { color: #b45309; font-weight: bold; }
+
+/* BUTTON */
+button {
+  padding: 8px 14px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button.logout {
+  background: #dc2626;
+}
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 10px;
+  color: #6b7280;
+}
 </style>
 </head>
+
 <body>
 
-<div id="loginScreen" style="display:flex; height:100vh; align-items:center; justify-content:center; background:#111827;">
-  <div class="card" style="width:400px;" id="loginCard">
+<!-- LOGIN -->
+<div id="loginScreen" class="fullscreen">
+  <div class="card" style="width:360px;">
     <h3>SecureAudit Cloud Login</h3>
-    <p><input type="text" placeholder="Username" id="username" style="width:100%; padding:8px; margin-bottom:10px"></p>
-    <p><input type="password" placeholder="Password" id="password" style="width:100%; padding:8px"></p>
-    <button onclick="checkCredentials()" style="width:100%; margin-top:10px">Next</button>
+    <input id="username" placeholder="Username" style="width:100%; padding:8px; margin-bottom:10px">
+    <input id="password" type="password" placeholder="Password" style="width:100%; padding:8px">
+    <button onclick="login()">Login</button>
   </div>
 </div>
 
-<div id="authScreen" style="display:none; height:100vh; align-items:center; justify-content:center; background:#111827; display:flex;">
-  <div class="card" style="width:400px;">
-    <h3>Authenticator Code</h3>
-    <p><input type="text" placeholder="Enter 6-digit code" id="authCode" style="width:100%; padding:8px"></p>
-    <button onclick="verifyAuth()" style="width:100%; margin-top:10px">Verify</button>
-    <p style="color:#6b7280; font-size:12px; margin-top:5px;">Enter the code from your authenticator app.</p>
-  </div>
+<!-- LOADING -->
+<div id="loadingScreen" class="fullscreen" style="display:none;">
+  <div class="spinner"></div>
 </div>
 
-<div id="app" style="display:none">
+<!-- APP -->
+<div id="app" style="display:none;">
 <header>
-<h2>SecureAudit Cloud – Third-Party Protection for StoreHub CRM</h2>
+  <h3>SecureAudit Cloud</h3>
+  <button class="logout" onclick="logout()">Logout</button>
 </header>
+
 <nav>
-<a onclick="showSection('dashboard', this)" class="active">Dashboard</a>
-<a onclick="showSection('audit', this)">Audit Logs</a>
-<a onclick="showSection('activity', this)">Unusual Activity</a>
-<a onclick="showSection('mfa', this)">MFA Management</a>
-<a onclick="showSection('reports', this)">Reports</a>
-<a onclick="showSection('settings', this)">Settings</a>
-<a onclick="showSection('customers', this)">Customer Data</a>
-<a onclick="showSection('notifications', this)">Alerts</a>
+  <a onclick="showSection('dashboard', this)" class="active">Dashboard</a>
+  <a onclick="showSection('audit', this)">Audit Logs</a>
+  <a onclick="showSection('settings', this)">Settings</a>
 </nav>
+
 <main>
-<div id="dashboard" class="section">
-<div class="card">
-<h3>Security Overview</h3>
-<p>Active Alerts: <b>2</b></p>
-<p onclick="showSection('activity', null)" style="cursor:pointer; color:#2563eb">View Alerts</p>
-</div>
-<div class="card">
-<h3>Activity Chart</h3>
-<canvas id="activityChart" height="120"></canvas>
-</div>
-</div>
-<div id="audit" class="section" style="display:none">
-<div class="card">
-<h3>Audit Logs (Live)</h3>
-<table>
-<tr><th>Timestamp</th><th>User</th><th>Action</th><th>Resource</th><th>IP</th><th>Status</th></tr>
-<tr><td id="t1"></td><td>Admin01</td><td>EXPORT</td><td>Customer_DB</td><td>103.21.88.2</td><td class="flag">FLAGGED</td></tr>
-<tr><td id="t2"></td><td>Staff07</td><td>VIEW</td><td>Sales_Records</td><td>103.21.88.9</td><td>OK</td></tr>
-<tr><td id="t3"></td><td>Staff12</td><td>LOGIN</td><td>CRM</td><td>45.67.102.4</td><td class="flag">UNUSUAL</td></tr>
-</table>
-<p style="color:#6b7280">Logs update automatically to simulate real-time monitoring.</p>
-</div>
-</div>
-<div id="activity" class="section" style="display:none">
-<div class="card">
-<h3>Current Unusual Activities</h3>
-<ul>
-<li><b>02:43</b> – Login outside business hours (Staff12)</li>
-<li><b>14:20</b> – Large export of customer database (Admin01)</li>
-</ul>
-</div>
-<div class="card">
-<h3>Past Incidents (Last 30 Days)</h3>
-<table>
-<tr><th>Date</th><th>Incident</th><th>Severity</th><th>Status</th></tr>
-<tr><td>18 Dec</td><td>Multiple failed MFA attempts</td><td>Medium</td><td>Resolved</td></tr>
-<tr><td>10 Dec</td><td>Unknown device login</td><td>High</td><td>Resolved</td></tr>
-</table>
-</div>
-</div>
-<div id="mfa" class="section" style="display:none">
-<div class="card">
-<h3>MFA Management</h3>
-<table>
-<tr><th>User</th><th>Role</th><th>MFA Status</th><th>Last Verified</th><th>Action</th></tr>
-<tr><td>Admin01</td><td>Administrator</td><td>Enabled</td><td>Today</td><td><button>Reset</button></td></tr>
-<tr><td>Staff07</td><td>Sales</td><td>Enabled</td><td>Yesterday</td><td><button>Reset</button></td></tr>
-<tr><td>Staff12</td><td>Support</td><td class="flag">Disabled</td><td>N/A</td><td><button>Force Enable</button></td></tr>
-</table>
-<p><button>Enforce MFA for All Users</button></p>
-</div>
-</div>
-<div id="reports" class="section" style="display:none">
-<div class="card">
-<h3>Security & Audit Reports</h3>
-<p><b>Current Period Summary</b></p>
-<ul>
-<li>Total Audit Events: 128</li>
-<li>Unusual Activities: 3</li>
-<li>MFA Violations: 1</li>
-</ul>
-<p><b>Historical Reports</b></p>
-<table>
-<tr><th>Period</th><th>Incidents</th><th>Status</th><th>Export</th></tr>
-<tr><td>Dec 2025</td><td>5</td><td>Closed</td><td><button>PDF</button></td></tr>
-<tr><td>Nov 2025</td><td>3</td><td>Closed</td><td><button>PDF</button></td></tr>
-</table>
-</div>
-</div>
-<div id="settings" class="section" style="display:none">
-<div class="card"><h3>Settings</h3><p>Configure alert thresholds and security rules.</p></div>
-</div>
-<div id="customers" class="section" style="display:none">
-<div class="card">
-<h3>Customer Data Log (Protected)</h3>
-<table>
-<tr><th>Customer ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Last Accessed</th><th>Accessed By</th></tr>
-<tr><td>CUST-001</td><td>Ahmad Z.</td><td>a***@mail.com</td><td>01*-****123</td><td>Today 14:20</td><td>Admin01</td></tr>
-<tr><td>CUST-002</td><td>Siti N.</td><td>s***@mail.com</td><td>01*-****456</td><td>Yesterday</td><td>Staff07</td></tr>
-<tr><td>CUST-003</td><td>Daniel R.</td><td>d***@mail.com</td><td>01*-****789</td><td>18 Dec</td><td>Staff07</td></tr>
-</table>
-<p style="color:#6b7280">Sensitive customer information is masked and fully audited to ensure data protection and compliance.</p>
-</div>
-</div>
-<div id="notifications" class="section" style="display:none">
-<div class="card">
-<h3>Security Notifications</h3>
-<ul>
-<li>🔴 <b>High:</b> Customer DB export detected (Admin01)</li>
-<li>🟠 <b>Medium:</b> Login outside business hours (Staff12)</li>
-<li>🟡 <b>Low:</b> Multiple failed MFA attempts</li>
-</ul>
-<p style="color:#6b7280">Notifications are generated automatically for unusual activities.</p>
-</div>
-</div>
+  <div id="dashboard" class="section">
+    <div class="card">
+      <h3>Security Overview</h3>
+      <p>Active Alerts: <b>2</b></p>
+    </div>
+  </div>
+
+  <div id="audit" class="section" style="display:none;">
+    <div class="card">
+      <h3>Audit Logs</h3>
+      <table>
+        <tr><th>User</th><th>Action</th><th>Status</th></tr>
+        <tr><td>Admin01</td><td>EXPORT</td><td class="flag">FLAGGED</td></tr>
+        <tr><td>Staff07</td><td>VIEW</td><td>OK</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="settings" class="section" style="display:none;">
+    <div class="card">
+      <h3>Settings</h3>
+      <label><input type="checkbox" checked> Enable Email Alerts</label><br><br>
+      <label><input type="checkbox"> Enforce MFA for all users</label><br><br>
+      <label>Alert Sensitivity
+        <select style="width:100%; padding:6px;">
+          <option>Low</option>
+          <option selected>Medium</option>
+          <option>High</option>
+        </select>
+      </label>
+      <br><br>
+      <button>Save Settings</button>
+    </div>
+  </div>
+</main>
 
 <footer>© 2025 SecureAudit Cloud</footer>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function checkCredentials(){
-  const user = document.getElementById('username').value;
-  const pass = document.getElementById('password').value;
-  if(user.trim() && pass.trim()){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('authScreen').style.display='flex';
-  } else {
-    alert('Please enter username and password');
-  }
+function login() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('loadingScreen').style.display = 'flex';
+  setTimeout(() => {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }, 1500);
 }
-function verifyAuth(){
-  const code = document.getElementById('authCode').value;
-  if(/^[0-9]{6}$/.test(code)){
-    document.getElementById('authScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById('dashboard').style.display='block';
-    if(document.getElementById('activityChart')) initChart();
-    updateTimes();
-  } else {
-    alert('Please enter a valid 6-digit authenticator code');
-  }
+
+function logout() {
+  location.reload();
 }
-function showSection(id, el){
-  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
-  const section = document.getElementById(id);
-  if(section) section.style.display='block';
-  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-  if(el) el.classList.add('active');
-}
-function initChart(){
-  const ctx = document.getElementById('activityChart');
-  if(ctx) new Chart(ctx,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri'],datasets:[{data:[12,19,8,15,5]}]},options:{plugins:{legend:{display:false}}}});
-}
-function updateTimes(){
-  const now = new Date();
-  const t1 = document.getElementById('t1');
-  const t2 = document.getElementById('t2');
-  const t3 = document.getElementById('t3');
-  if(t1) t1.innerText = new Date(now.getTime()-1000*60*12).toLocaleString();
-  if(t2) t2.innerText = new Date(now.getTime()-1000*60*6).toLocaleString();
-  if(t3) t3.innerText = new Date(now.getTime()-1000*60*90).toLocaleString();
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 </script>
+
 </body>
 </html>
